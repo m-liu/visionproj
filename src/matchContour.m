@@ -10,10 +10,21 @@
 %
 %
 
-function [] = matchContour(polygons)
+angleErr = 5; 
+
+%keep track of a score for all the pieces and each vertex
+% [1] = first polygon index; [2] = second polygon index
+% [3] = first polgyon vertex index; [4] second polgyon vertex index
+% [5] = contour match score
+scores = [];
+
+function [newPolygons] = matchContour(polygons)
     %for each pair of polygons
 	for polyi=1:size(polygons,1)
         for polyj=polyi:size(polygons,1)
+            %get perimeters
+            periPolyi = polygons(polyi).perimeter;
+            periPolyj = polygons(polyj).perimeter;
             %for all vertices, look for complementary angles
             %TODO border angles should be 180 deg
             nvi = size(polygons(polyi), 1);
@@ -21,16 +32,60 @@ function [] = matchContour(polygons)
             
             for vi=1:nvi
                 for vj=1:nvj
-                    anglesum = polygons(polyi).vertices(vi).angle + polygons(polyj).vertices(vj).angle
+                    sc = 0; 
+                    verti = polygons(polyi).vertices(vi);
+                    vertj = polygons(polyj).vertices(vj);
+                    %check angles sum to 360
+                    %TODO give an error threshold for approximation
+                    anglesum = verti.angle + vertj.angle
                     if (anglesum == 360)
-                        
+                       %sc = sc + 1;
+                       %check distance between vertex and neighbour
+                       % note: vertices are recorded clockwise
+                       if ( verti.dNext == vertj.dPrev && verti.dPrev == vertj.dNext ) 
+                           sc = sc + 5;
+                           %perimeter score. If the matching contour is more than 1/10 of the sum of perimeters of both polygons,
+                           %add 2
+                           if ( (verti.dNext + verti.dPrev) > (0.1 * (periPolyi+periPolyj)) )
+                               sc = sc + 2;
+                           end
+                       elseif (verti.dNext == vertj.dPrev )
+                           sc = sc + 1;
+                           %perimeter score. If the matching contour is more than 1/20 of the sum of perimeters of both polygons,
+                           %add 1
+                           if ( verti.dNext > 0.05 * (periPolyi+periPolyj) )
+                               sc = sc + 1;
+                           end
+                       elseif (verti.dPrev == vertj.dNext)
+                           sc = sc + 1;
+                           %perimeter score. If the matching contour is more than 1/20 of the sum of perimeters of both polygons,
+                           %add 1
+                           if ( verti.dPrev > (0.05 * (periPolyi+periPolyj)) )
+                               sc = sc + 1;
+                           end
+                       else 
+                           %not a good match
+                       end
                     end
-                    
+                    scores(end+1, :) = [polyi polyj vi vj sc];
                 end
-            end
-            
-            
+            end 
         end
+        
+        %sort the scores and extract best score 
+        scores = sortrows(scores, 5);
+        bestMatch = scores(1);
+        
+        %merge the two polygons that match on the angle
+        newPoly = mergePolygons( polygons(bestMatch(1)), polygons(bestMatch(2)), bestMatch(3), bestMatch(4) )
+        
+        %remove the two polygons from the original set
+        
+        %add the new polygon
+        
+        %return the new set
+        
+        
         
     end
     
