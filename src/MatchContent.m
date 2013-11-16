@@ -3,7 +3,7 @@
 %  then computes a match score based on the input. The equation is taken
 %  from: http://people.csail.mit.edu/taegsang/Documents/JigsawSolver.pdf
 
-function [score] = MatchContent(X, Y)
+function [score] = matchContent(X, Y)
 
 % Note this equation works with LAB space colors, that is the assumption
 

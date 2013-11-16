@@ -1,4 +1,4 @@
-%% Test MatchContent Function
+%% Test matchContent Function
 function [accuracy] =  testMatchContent()
     % Checks if the compatibility function found the actual neighbor with
     % the highest probability.
@@ -89,7 +89,7 @@ function [accuracy] =  testMatchContent()
         firstVec = firstPart(:,partSize,:);
         secondVec = secondPart(:,1,:);
         
-        compVal = MatchContent(firstVec, secondVec);
+        compVal = matchContent(firstVec, secondVec);
     end
 
     % Checks if the compatibility function found the actual neighbor with
