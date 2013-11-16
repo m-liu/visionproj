@@ -5,68 +5,66 @@ function [accuracy] =  testMatchContent()
     cformRgbToLab = makecform('srgb2lab');
     hits = 0;
     total = 0;
-    partSize = 256;
+    partSize = 1;
 
-    for imageIndex = 1:10
-        % Reading the image and converting to the LAB color scheme.
-        image = imread('../img/lenn1.png');
-        labImage = double(applycform(image, cformRgbToLab));
+    % Reading the image and converting to the LAB color scheme.
+    image = imread('../img/lenna1.png');
+    labImage = double(applycform(image, cformRgbToLab));
 
-        image = double(image);
-        imageSize = size(image);
+    image = double(image);
+    imageSize = size(image);
 
-        % Calculate a parts data
-        % rows = imageSize(1) / partSize;
-        % only vertical strips for now;
-        rows = 1;
-        cols = imageSize(2) / partSize;
-        numOfParts = rows * cols;
+    % Calculate a parts data
+    % rows = imageSize(1) / partSize;
+    % only vertical strips for now;
+    rows = 1;
+    cols = imageSize(2) / partSize;
+    numOfParts = rows * cols;
 
-        % Creating parts array that contain the puzzle parts
-        labPartsArray =  zeros(512, partSize, 3, numOfParts);
-        rgbPartsArray =  zeros(512, partSize, 3, numOfParts);
+    % Creating parts array that contain the puzzle parts
+    labPartsArray =  zeros(512, partSize, 3, numOfParts);
+    rgbPartsArray =  zeros(512, partSize, 3, numOfParts);
 
-        % Splits the image into parts.
-        cutImageToParts();
+    % Splits the image into parts.
+    cutImageToParts();
 
-        % Initialize parts compatibility, unlike when solving the jigsaw
-        % we will fill the entire partsCompVal matrix.
-        partsCompVal = zeros(numOfParts,numOfParts);
-        
-        % Populate the partsCompVal matrix
-        for i = 1:numOfParts
-            for j = 1:numOfParts
-                if (i == j)
-                    partsCompVal(i,j) = bitmax;
-                else
-                    partsCompVal(i,j) = calcCompatibility(i, j);
-                end
+    % Initialize parts compatibility, unlike when solving the jigsaw
+    % we will fill the entire partsCompVal matrix.
+    partsCompVal = zeros(numOfParts,numOfParts);
+
+    % Populate the partsCompVal matrix
+    for i = 1:numOfParts
+        for j = 1:numOfParts
+            if (i == j)
+                partsCompVal(i,j) = bitmax;
+            else
+                partsCompVal(i,j) = calcCompatibility(i, j);
             end
         end
-
-        % Creating the expected result matrix so we will be able to
-        % know a parts neighbors.
-        partsExpMat = zeros(rows,cols);
-        for i = 1:rows
-            for j = 1:cols
-                partsExpMat(i,j) = (i - 1) * cols + j;
-            end
-        end
-
-        % Going over the connections
-        for i = 1:rows
-            for j = 1:cols
-                if (j > 1)
-                    hits = hits + compCorrect(partsExpMat(i,j-1), partsExpMat(i,j));
-                end
-                if (j<cols)
-                    hits = hits + compCorrect(partsExpMat(i,j), partsExpMat(i,j+1));
-                end
-            end
-        end
-
-        total = total + rows * (cols - 1) + (rows - 1) * cols;
     end
+
+    % Creating the expected result matrix so we will be able to
+    % know a parts neighbors.
+    partsExpMat = zeros(rows,cols);
+    for i = 1:rows
+        for j = 1:cols
+            partsExpMat(i,j) = (i - 1) * cols + j;
+        end
+    end
+
+    % Going over the connections
+    for i = 1:rows
+        for j = 1:cols
+            if (j > 1)
+                hits = hits + compCorrect(partsExpMat(i,j-1), partsExpMat(i,j));
+            end
+            if (j<cols)
+                hits = hits + compCorrect(partsExpMat(i,j), partsExpMat(i,j+1));
+            end
+        end
+    end
+
+    total = total + rows * (cols - 1) + (rows - 1) * cols;
 
     % We count each connection (edge) twice.
     accuracy = (hits / 2) / total;
@@ -85,8 +83,8 @@ function [accuracy] =  testMatchContent()
     
     % Calculate compatibility between 2 pieces
     function [compVal] = calcCompatibility(i, j)
-        firstPart = labPartsArray(:,:,:, i);
-        secondPart = labPartsArray(:,:,:, j);
+        firstPart = rgbPartsArray(:,:,:, i);
+        secondPart = rgbPartsArray(:,:,:, j);
         
         firstVec = firstPart(:,partSize,:);
         secondVec = secondPart(:,1,:);
