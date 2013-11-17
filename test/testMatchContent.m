@@ -5,7 +5,7 @@ function [accuracy] =  testMatchContent()
     cformRgbToLab = makecform('srgb2lab');
     hits = 0;
     total = 0;
-    partSize = 1;
+    partSize = 4;
 
     % Reading the image and converting to the LAB color scheme.
     image = imread('../img/lenna1.png');
