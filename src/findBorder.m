@@ -15,8 +15,8 @@ function [sortedList] = findBorder(im)
         end
     end
     
-    figure;
-    imshow(border);
+   % figure;
+   % imshow(border);
     
     % need to sort the pointslist in clockwise order
     % 1 represents 'up' neighbor of the pixel, 2 = 'up-right', 3 = 'right'
