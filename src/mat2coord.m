@@ -1,5 +1,5 @@
 
-function coord = mat2coord(mat, size)
+function [x y] = mat2coord(mat, size)
 
 %coord=[x y]
 %mat = [row col]
@@ -7,5 +7,5 @@ function coord = mat2coord(mat, size)
 
     x = mat(2);
     y = size(1) - mat(1);
-    coord = [x y];
+    %coord = [x y];
 end

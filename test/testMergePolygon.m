@@ -18,7 +18,7 @@ for imInd=1:size(inputImgs)
 
     %convert contour pixels to coordinates
     for i=1:size(contour,1)
-        contour(i,:) = mat2coord(contour(i,:), size(im));
+        [contour(i,1) contour(i,2)] = mat2coord(contour(i,:), size(im));
     end
 %     figure;
 %     plot(contour(:,1), contour(:,2));
@@ -46,6 +46,14 @@ for imInd=1:size(inputImgs)
     pieces(imInd) = createPiece( verts, im );
     
 end
+
+%manually merge two polygons as a test
+p1 = pieces(1);
+p2 = pieces(2)
+mergePolygons(p1, p2, 3, 8)
+
+
+
 
 
 
