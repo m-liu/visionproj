@@ -6,6 +6,10 @@ clear variables
 directory = 'img/set2/';
 inputImgs = dir( strcat(directory, '*.bmp') );
 
+if ( size(inputImgs,1) < 1 )
+    error('image inputs not found');
+end
+
 for imInd=1:size(inputImgs)
     
     %read input image
@@ -18,7 +22,7 @@ for imInd=1:size(inputImgs)
 
     %convert contour pixels to coordinates
     for i=1:size(contour,1)
-        contour(i,:) = mat2coord(contour(i,:), size(im));
+        [contour(i,1) contour(i,2)] = mat2coord(contour(i,:), size(im));
     end
 %     figure;
 %     plot(contour(:,1), contour(:,2));

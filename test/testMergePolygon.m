@@ -6,6 +6,10 @@ clear variables
 directory = 'img/set2/';
 inputImgs = dir( strcat(directory, '*.bmp') );
 
+if ( size(inputImgs,1) < 1 )
+    error('image inputs not found');
+end
+
 for imInd=1:size(inputImgs)
     
     %read input image
