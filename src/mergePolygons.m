@@ -91,9 +91,10 @@ if (ymin < 1)
 end
 
 %find size of new canvas
-width = max( size(pixA,2)+moveAx, dest(:,1) ) + 10
-height = max( size(pixA,1)+moveAy, dest(:,2) ) + 10
+width = max( size(pixA,2)+moveAx, max(dest(:,1)) ) + 10
+height = max( size(pixA,1)+moveAy, max(dest(:,2)) ) + 10
 imMerge(1:height, 1:width, 1:3) = 255; %initialize to white
+imMerge = uint8(imMerge);
 
 %fill with polyA pixels
 for i=1:size(pixA,1)
@@ -110,11 +111,11 @@ end
 for i=1:size(dest,1)
     [rowM colM] = coord2mat(dest(i,:), size(imMerge));
     [rowB colB] = coord2mat(src(i,:), size(pixB));
-    imNew(rowM, colM, :) = pixB(rowB, colB, :);
+    imMerge(rowM, colM, :) = pixB(rowB, colB, :);
 end
 
 figure;
-imshow(imNew);
+imshow(imMerge);
 
 %generate new vertices data for merged polygon
 %TODO
