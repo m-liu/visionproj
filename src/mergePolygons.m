@@ -46,105 +46,91 @@ end
 if (bNextTheta < 0)
     bNextTheta = bNextTheta + (2*pi);
 end
-%clockwise rotation required to go from b to a
-theta = bNextTheta - aPrevTheta;
+%counterclockwise rotation required to go from b to a
+theta = aPrevTheta - bNextTheta ;
 
 
-
-pixBgray = rgb2gray(pixB);
-
-%create a mapping table
-src = [];
-dest = [];
-for i=1:size(pixB,1)
-    for j=1:size(pixB,2)
-        if (pixBgray(i,j) < 253)
-            %convert to cartesian coordinates
-            [x y] = mat2coord([i j], size(pixB));
-            src(end+1, :) = [x y];
-            %translate
-            xNew = x + transX;
-            yNew = y + transY;
-            %rotate
-            [xNew,yNew,xor,yor,trash] = rotateData(xNew,yNew,aX,aY,theta,'clockwise');
-            dest(end+1, :) = [round(xNew) round(yNew)];
-            
-        end
-    end
+%determine the max dimensions 
+polyBvxNew = []
+for i=1:size(polyB.vertices,2)
+    vxNew = polyB.vertices(i).posX + transX;
+    vyNew = polyB.vertices(i).posY + transY;
+    
+    [vxNew,vyNew,xor,yor,trash] = rotateData(vxNew,vyNew,aX,aY,theta,'anticlockwise');
+    %vxNew = vxNew + moveAx;
+    %vyNew = vyNew + moveAy;
+    polyBvxNew(end+1, :) = [round(vxNew) round(vyNew)]
 end
-
 
 %create a new image canvas
 %first put in polyA.im, but translate it so everything is positive after
 %merging with polyB.im 
-xmin = min(dest(:, 1));
-ymin = min(dest(:, 2));
+xmin = min(polyBvxNew(:, 1));
+ymin = min(polyBvxNew(:, 2));
 
 moveAx = 0;
 moveAy = 0;
 if (xmin < 1)
     moveAx = abs(xmin)+10; %give 10 pixels of leeway
-    dest(:,1) = dest(:,1)+moveAx;
+    polyBvxNew(:,1) = polyBvxNew(:,1)+moveAx;
 end
 
 if (ymin < 1)
     moveAy = abs(ymin)+10;
-    dest(:,2) = dest(:,2)+moveAy;
+    polyBvxNew(:,2) = polyBvxNew(:,2)+moveAy;
 end
 
 %find size of new canvas
-width = max( size(pixA,2)+moveAx, max(dest(:,1)) ) + 10
-height = max( size(pixA,1)+moveAy, max(dest(:,2)) ) + 10
+width = max( size(pixA,2)+moveAx, max(polyBvxNew(:,1)) ) + 10
+height = max( size(pixA,1)+moveAy, max(polyBvxNew(:,2)) ) + 10
 imMerge(1:height, 1:width, 1:3) = 255; %initialize to white
 imMerge = uint8(imMerge);
 
 %fill with polyA pixels
 for i=1:size(pixA,1)
     for j=1:size(pixA,2)
-        [xA yA] = mat2coord([i j],size(pixA));
-        xA = xA+moveAx;
-        yA = yA+moveAy;
-        [rowM colM] = coord2mat([xA yA], size(imMerge));
-        imMerge(rowM, colM, :) = pixA(i, j, :);
+        if ( pixA(i,j,:) < 253 )
+            [xA yA] = mat2coord([i j],size(pixA));
+            xA = xA+moveAx;
+            yA = yA+moveAy;
+            [rowM colM] = coord2mat([xA yA], size(imMerge));
+            imMerge(rowM, colM, :) = pixA(i, j, :);
+        end
     end
 end
 
-%translate coordinates of polyA's vertices
+
+%fill with polyB pixels after rotation
+pixBtr = imTransRotate(pixB, [bX bY], rad2deg(theta));
+centerX = floor(size(pixBtr,2)/2);
+centerY = floor(size(pixBtr,1)/2);
+tX = aX - centerX;
+tY = aY - centerY;
+for i=1:size(pixBtr,1)
+    for j=1:size(pixBtr,2)
+        if ( pixBtr(i,j,:) < 253 )
+            [x y] = mat2coord([i j], size(pixBtr));
+            %translate
+            xNew = x + tX;
+            yNew = y + tY;
+            [rowM colM] = coord2mat([xNew yNew], size(imMerge));
+            imMerge(rowM, colM, :) = pixBtr(i, j, :);
+            
+        end
+    end
+end
+
+%update polyA's vertices
 for i=1:size(polyA.vertices,2)
     polyA.vertices(i).posX = polyA.vertices(i).posX + moveAx;
     polyA.vertices(i).posY = polyA.vertices(i).posY + moveAy;
 end
 
-%fill with polyB pixels according to mapping table
-for i=1:size(dest,1)
-    %translate img such that vB is at center of the img
-    
-    %rotate img
-    
-    %translate again according to moveAx and transX
-    
-    %[rowM colM] = coord2mat(dest(i,:), size(imMerge));
-    %[rowB colB] = coord2mat(src(i,:), size(pixB));
-    %imMerge(rowM, colM, :) = pixB(rowB, colB, :);
-end
-
-%translate and rotate coordinates of polyB's vertices
+%update polyB's vertices
 for i=1:size(polyB.vertices,2)
-    vxNew = polyB.vertices(i).posX + transX;
-    vyNew = polyB.vertices(i).posY + transY;
-    
-    [vxNew,vyNew,xor,yor,trash] = rotateData(vxNew,vyNew,aX,aY,theta,'clockwise');
-    vxNew = vxNew + moveAx;
-    vyNew = vyNew + moveAy;
-    
-    polyB.vertices(i).posX = round(vxNew);
-    polyB.vertices(i).posY = round(vyNew);
+    polyB.vertices(i).posX = polyBvxNew(i,1);
+    polyB.vertices(i).posY = polyBvxNew(i,2);
 end
-
-
-
-figure;
-imshow(imMerge);
 
 %generate new vertices data for merged polygon. First merge all vertices
 verticesMerged = polyA.vertices( 1:vA );
@@ -200,6 +186,20 @@ end
 
 %return new polygon
 polyMerged = struct('vertices', verticesMerged, 'perimeter', perimeter, 'im', imMerge);
+
+%plot
+figure;
+imshow(imMerge); hold on
+
+for i=1:size(verticesMerged,2)
+    xPlot(i) = verticesMerged(i).posX;
+    yPlot(i) = size(imMerge, 1) -  verticesMerged(i).posY;
+    label{i} = sprintf('[%d] %0.1f', i, verticesMerged(i).angle);
+end
+scatter(xPlot, yPlot, 'bo'); hold on;
+text(xPlot, yPlot-5, label);
+
+
 
 
 end
