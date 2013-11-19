@@ -52,9 +52,10 @@ for imInd=1:size(inputImgs)
 end
 
 %manually merge two polygons as a test
-p1 = pieces(1);
-p2 = pieces(2)
-mergePolygons(p1, p2, 3, 8)
+%mergePolygons(pieces(1), pieces(2), 3, 8)
+
+%test bad angle merge
+mergePolygons(pieces(1), pieces(2), 4, 8)
 
 
 

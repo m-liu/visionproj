@@ -50,6 +50,7 @@ end
 theta = bNextTheta - aPrevTheta;
 
 
+
 pixBgray = rgb2gray(pixB);
 
 %create a mapping table
@@ -71,8 +72,6 @@ for i=1:size(pixB,1)
         end
     end
 end
-
-
 
 
 %create a new image canvas
@@ -118,9 +117,15 @@ end
 
 %fill with polyB pixels according to mapping table
 for i=1:size(dest,1)
-    [rowM colM] = coord2mat(dest(i,:), size(imMerge));
-    [rowB colB] = coord2mat(src(i,:), size(pixB));
-    imMerge(rowM, colM, :) = pixB(rowB, colB, :);
+    %translate img such that vB is at center of the img
+    
+    %rotate img
+    
+    %translate again according to moveAx and transX
+    
+    %[rowM colM] = coord2mat(dest(i,:), size(imMerge));
+    %[rowB colB] = coord2mat(src(i,:), size(pixB));
+    %imMerge(rowM, colM, :) = pixB(rowB, colB, :);
 end
 
 %translate and rotate coordinates of polyB's vertices
