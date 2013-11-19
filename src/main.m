@@ -48,7 +48,11 @@ for imInd=1:size(inputImgs)
     % where vertices structs are:
     %   'angle', 'dNext', 'dPrev', 'posX', 'posY'
     pieces(imInd) = createPiece( verts, im );
-    
+
+end
+
+while (size(pieces,2) > 1)
+    pieces = matchContour(pieces);
 end
 
 

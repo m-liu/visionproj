@@ -10,25 +10,29 @@
 %
 %
 
-angleErr = 5; 
 
-%keep track of a score for all the pieces and each vertex
-% [1] = first polygon index; [2] = second polygon index
-% [3] = first polgyon vertex index; [4] second polgyon vertex index
-% [5] = contour match score
-scores = [];
+
+
 
 function [newPolygons] = matchContour(polygons)
+    %keep track of a score for all the pieces and each vertex
+    % [1] = first polygon index; [2] = second polygon index
+    % [3] = first polgyon vertex index; [4] second polgyon vertex index
+    % [5] = contour match score
+    scores = [];
+    angleErr = 5; 
+    dErr = 3
+    
     %for each pair of polygons
-	for polyi=1:size(polygons,1)
-        for polyj=polyi:size(polygons,1)
+	for polyi=1:size(polygons,2)
+        for polyj=(polyi+1):size(polygons,2)
             %get perimeters
             periPolyi = polygons(polyi).perimeter;
             periPolyj = polygons(polyj).perimeter;
             %for all vertices, look for complementary angles
             %TODO border angles should be 180 deg
-            nvi = size(polygons(polyi), 1);
-            nvj = size(polygons(polyj), 1);
+            nvi = size(polygons(polyi).vertices, 2);
+            nvj = size(polygons(polyj).vertices, 2);
             
             for vi=1:nvi
                 for vj=1:nvj
@@ -38,25 +42,25 @@ function [newPolygons] = matchContour(polygons)
                     %check angles sum to 360
                     %TODO give an error threshold for approximation
                     anglesum = verti.angle + vertj.angle
-                    if (anglesum == 360)
+                    if (anglesum < 360+angleErr && anglesum > 360-angleErr)
                        %sc = sc + 1;
                        %check distance between vertex and neighbour
                        % note: vertices are recorded clockwise
-                       if ( verti.dNext == vertj.dPrev && verti.dPrev == vertj.dNext ) 
+                       if ( approxEq(verti.dNext,vertj.dPrev, dErr) && approxEq(verti.dPrev,vertj.dNext,dErr) ) 
                            sc = sc + 5;
                            %perimeter score. If the matching contour is more than 1/10 of the sum of perimeters of both polygons,
                            %add 2
                            if ( (verti.dNext + verti.dPrev) > (0.1 * (periPolyi+periPolyj)) )
                                sc = sc + 2;
                            end
-                       elseif (verti.dNext == vertj.dPrev )
+                       elseif ( approxEq(verti.dNext, vertj.dPrev, dErr) )
                            sc = sc + 1;
                            %perimeter score. If the matching contour is more than 1/20 of the sum of perimeters of both polygons,
                            %add 1
                            if ( verti.dNext > 0.05 * (periPolyi+periPolyj) )
                                sc = sc + 1;
                            end
-                       elseif (verti.dPrev == vertj.dNext)
+                       elseif ( approxEq(verti.dPrev, vertj.dNext, dErr) )
                            sc = sc + 1;
                            %perimeter score. If the matching contour is more than 1/20 of the sum of perimeters of both polygons,
                            %add 1
@@ -71,24 +75,30 @@ function [newPolygons] = matchContour(polygons)
                 end
             end 
         end
+    end
         
         %sort the scores and extract best score 
         scores = sortrows(scores, 5);
-        bestMatch = scores(1);
+        bestMatch = scores(end, :);
         
         %merge the two polygons that match on the angle
         newPoly = mergePolygons( polygons(bestMatch(1)), polygons(bestMatch(2)), bestMatch(3), bestMatch(4) )
         
         %remove the two polygons from the original set
-        
         %add the new polygon
+        polygons(bestMatch(1)) = newPoly;
+        polygons(bestMatch(2)) = [];
         
         %return the new set
-        
-        
-        
+        newPolygons = polygons;
+
+end
+
+function res = approxEq (v1, v2, err)
+    if ( abs(v1-v2) < err )
+        res= 1;
+    else
+        res= 0;
     end
-    
-
-
+        
 end

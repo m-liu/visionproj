@@ -178,6 +178,10 @@ while (1)
     end
 end
 
+
+
+
+
 %compute perimeter
 perimeter = 0;
 for i=1:size(verticesMerged)
@@ -197,7 +201,7 @@ for i=1:size(verticesMerged,2)
     label{i} = sprintf('[%d] %0.1f', i, verticesMerged(i).angle);
 end
 scatter(xPlot, yPlot, 'bo'); hold on;
-text(xPlot, yPlot-5, label);
+text(xPlot, yPlot-7, label);
 
 
 
