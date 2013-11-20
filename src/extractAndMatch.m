@@ -25,11 +25,33 @@ function [matchScore] = extractAndMatch(imi, imj, verti, verti2, vertj, vertj2)
     % take the shorter of the two edges
     minEdge = min(newVectori(2),newVectorj(2));
     
-    extractedEdgei = [];
-    extractedEdgej = [];
+    extractedEdgei = zeros(minEdge, 3);
+    extractedEdgej = zeros(minEdge, 3);
     for index=1:minEdge
-        extractedEdgei(index) = imiRotated(newVerti(1),newVerti(2)+index-1,:);
-        extractedEdgej(index) = imjRotated(newVertj(1),(newVertj(2)+index-1),:);
+        for adj=1:5
+            if ~(imiRotated(newVerti(1)+adj,newVerti(2)+index-1,:) == 255)
+                extractedEdgei(index) = imiRotated(newVerti(1)+adj,newVerti(2)+index-1,:);
+                break;
+            elseif ~(imiRotated(newVerti(1)-adj,newVerti(2)+index-1,:) == 255)
+                extractedEdgei(index) = imiRotated(newVerti(1)-adj,newVerti(2)+index-1,:);
+                break;
+            end
+            if adj == 10
+                warning('No colored pixel found for imi at (%d,%d)', newVerti(1), newVerti(2)+index-1);
+            end
+        end
+        for adj=1:5
+            if ~(imjRotated(newVertj(1)+adj,newVertj(2)+index-1,:) == 255)
+                extractedEdgej(index) = imjRotated(newVertj(1)+adj,newVertj(2)+index-1,:);
+                break;
+            elseif ~(imjRotated(newVertj(1)-adj,newVertj(2)+index-1,:) == 255)
+                extractedEdgej(index) = imjRotated(newVertj(1)-adj,newVertj(2)+index-1,:);
+                break;
+            end
+            if adj == 10
+                warning('No colored pixel found for imj at (%d,%d)', newVertj(1), newVertj(2)+index-1);
+            end
+        end
     end
    
     matchScore = matchContent(extractedEdgei, extractedEdgej);
