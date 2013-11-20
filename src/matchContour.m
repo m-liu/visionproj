@@ -42,9 +42,16 @@ function [newPolygons] = matchContour(polygons)
                     vertj = polygons(polyj).vertices(vj);
                     %check angles sum to 360
                     %TODO give an error threshold for approximation
-                    anglesum = verti.angle + vertj.angle
-                    if (anglesum < 360+angleErr && anglesum > 360-angleErr)
-                       %sc = sc + 1;
+                    anglesum = verti.angle + vertj.angle;
+                    if (anglesum < 360+angleErr && anglesum > 360-angleErr)        
+                       %extract edges for content matching
+                       imi = polygons(polyi).im;
+                       imj = polygons(polyj).im;
+                       vertiNext = polygons(polyi).vertices(mod(nvi+vi+1,nvi)+1);
+                       vertiPrev = polygons(polyi).vertices(mod(nvi+vi-1,nvi)+1);
+                       vertjNext = polygons(polyj).vertices(mod(nvj+vj+1,nvj)+1);
+                       vertjPrev = polygons(polyj).vertices(mod(nvj+vj-1,nvj)+1);                      
+
                        %check distance between vertex and neighbour
                        % note: vertices are recorded clockwise
                        if ( approxEq(verti.dNext,vertj.dPrev, dErr) && approxEq(verti.dPrev,vertj.dNext,dErr) ) 
@@ -54,6 +61,11 @@ function [newPolygons] = matchContour(polygons)
                            if ( (verti.dNext + verti.dPrev) > (0.1 * (periPolyi+periPolyj)) )
                                sc = sc + 2;
                            end
+                           
+                           %content match score
+                           matchScore = (extractAndMatch(imi, imj, verti, vertiNext, vertj, vertjPrev) + ...
+                                            extractAndMatch(imi, imj, verti, vertiPrev, vertj, vertjNext)) / 2;
+                           
                        elseif ( approxEq(verti.dNext, vertj.dPrev, dErr) )
                            sc = sc + 1;
                            %perimeter score. If the matching contour is more than 1/20 of the sum of perimeters of both polygons,
@@ -61,6 +73,10 @@ function [newPolygons] = matchContour(polygons)
                            if ( verti.dNext > 0.05 * (periPolyi+periPolyj) )
                                sc = sc + 1;
                            end
+                           
+                           %content match score
+                           matchScore = extractAndMatch(imi, imj, verti, vertiNext, vertj, vertjPrev);
+                           
                        elseif ( approxEq(verti.dPrev, vertj.dNext, dErr) )
                            sc = sc + 1;
                            %perimeter score. If the matching contour is more than 1/20 of the sum of perimeters of both polygons,
@@ -68,6 +84,9 @@ function [newPolygons] = matchContour(polygons)
                            if ( verti.dPrev > (0.05 * (periPolyi+periPolyj)) )
                                sc = sc + 1;
                            end
+                           
+                           %content match score
+                           matchScore = extractAndMatch(imi, imj, verti, vertiPrev, vertj, vertjNext);
                        else 
                            %not a good match
                        end
