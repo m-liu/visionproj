@@ -2,6 +2,9 @@ function [ polyMerged ] = mergePolygons( polyA, polyB, vA, vB )
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
     
+distErr = 8;
+global angleErr;
+
 %[xr,yr,xor,yor,theta] = rotateData(x,y,xo,yo,theta,direction)
 
 pixA = polyA.im;
@@ -104,8 +107,8 @@ end
 pixBtr = imTransRotate(pixB, [bX bY], rad2deg(theta));
 centerX = floor(size(pixBtr,2)/2);
 centerY = floor(size(pixBtr,1)/2);
-tX = aX - centerX;
-tY = aY - centerY;
+tX = aX - centerX + moveAx;
+tY = aY - centerY + moveAy;
 for i=1:size(pixBtr,1)
     for j=1:size(pixBtr,2)
         if ( pixBtr(i,j,:) < 253 )
@@ -119,6 +122,9 @@ for i=1:size(pixBtr,1)
         end
     end
 end
+
+figure;
+imshow(imMerge); hold on
 
 %update polyA's vertices
 for i=1:size(polyA.vertices,2)
@@ -145,29 +151,40 @@ verticesMerged = [ verticesMerged, polyA.vertices( vA+1 : end ) ];
 while (1) 
     found = 0;
     i=1;
-    while (~found && i<size(verticesMerged,2))
-        j=i+1;
-        while (~found && j < size(verticesMerged,2))
-            v1 = [verticesMerged(i).posX, verticesMerged(i).posY];
-            v2 = [verticesMerged(j).posX, verticesMerged(j).posY];
-            angsum = verticesMerged(i).angle + verticesMerged(j).angle;
-            dist = 5;
-            %delete vertices that add up to 360
-            if ( inProximity(v1, v2, dist) && angsum < 365 && angsum > 355 )
-                verticesMerged([i j]) = [];
-                found=1;
-            %merge vertices next to each other 
-            elseif ( inProximity(v1, v2, dist) && j==i+1 )
-                v1 = i;
-                v2 = j;
-                verticesMerged(v1).angle = verticesMerged(v1).angle + verticesMerged(v2).angle;
-                verticesMerged(v1).dNext = verticesMerged(v2).dNext;
-                verticesMerged(v1).posX = round(mean( [verticesMerged(v1).posX, verticesMerged(v2).posX] ));
-                verticesMerged(v1).posY = round(mean( [verticesMerged(v1).posY, verticesMerged(v2).posY] ));
-                verticesMerged(v2) = [];
-                found=1;
-            elseif ( inProximity(v1, v2, dist) )
-                warning('vertices in the same location, but cant be merged');
+    while (~found && i<=size(verticesMerged,2))
+        j=1;
+        
+        %testing: delete angles that are ~180 degrees because they are just
+        %straight lines
+        if (verticesMerged(i).angle < 180+angleErr && verticesMerged(i).angle > 180-angleErr)
+            verticesMerged(i) = [];
+            found=1;
+        end
+        
+        while (~found && j <= size(verticesMerged,2))
+            if (i~=j)
+                v1 = [verticesMerged(i).posX, verticesMerged(i).posY];
+                v2 = [verticesMerged(j).posX, verticesMerged(j).posY];
+                angsum = verticesMerged(i).angle + verticesMerged(j).angle;
+                nVert = size(verticesMerged,2);
+                
+                %delete vertices that add up to 360
+                if ( inProximity(v1, v2, distErr) && angsum < (360+angleErr) && angsum > (360-angleErr) )
+                    verticesMerged([i j]) = [];
+                    found=1;
+                    %merge vertices next to each other
+                elseif ( inProximity(v1, v2, distErr) && mod(j,nVert)==mod(i+1,nVert) )
+                    v1 = i;
+                    v2 = j;
+                    verticesMerged(v1).angle = verticesMerged(v1).angle + verticesMerged(v2).angle;
+                    verticesMerged(v1).dNext = verticesMerged(v2).dNext;
+                    verticesMerged(v1).posX = round(mean( [verticesMerged(v1).posX, verticesMerged(v2).posX] ));
+                    verticesMerged(v1).posY = round(mean( [verticesMerged(v1).posY, verticesMerged(v2).posY] ));
+                    verticesMerged(v2) = [];
+                    found=1;
+                elseif ( inProximity(v1, v2, distErr) )
+                    warning('vertices in the same location, but cant be merged');
+                end
             end
             j=j+1;
         end
@@ -178,6 +195,15 @@ while (1)
     end
 end
 
+%testing: delete angles that are ~180 degrees because they are just
+%straight lines
+% verticesTmp=[];
+% for i=1:size(verticesMerged,2)
+%     if ~(verticesMerged(i).angle < 180+angleErr && verticesMerged(i).angle > 180-angleErr)
+%         verticesTmp = [verticesTmp, verticesMerged(i)];
+%     end
+% end
+% verticesMerged = verticesTmp;
 
 
 
@@ -192,15 +218,14 @@ end
 polyMerged = struct('vertices', verticesMerged, 'perimeter', perimeter, 'im', imMerge);
 
 %plot
-figure;
-imshow(imMerge); hold on
+
 
 for i=1:size(verticesMerged,2)
     xPlot(i) = verticesMerged(i).posX;
     yPlot(i) = size(imMerge, 1) -  verticesMerged(i).posY;
     label{i} = sprintf('[%d] %0.1f', i, verticesMerged(i).angle);
 end
-scatter(xPlot, yPlot, 'bo'); hold on;
+scatter(xPlot, yPlot, 'bo'); 
 text(xPlot, yPlot-7, label);
 
 
@@ -210,8 +235,8 @@ end
 
 
 
-function res = inProximity(pt1, pt2, dist)
-    if (norm(pt1-pt2) < dist)
+function res = inProximity(pt1, pt2, distErr)
+    if (norm(pt1-pt2) < distErr)
         res = 1;
     else
         res = 0;

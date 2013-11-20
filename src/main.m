@@ -3,7 +3,7 @@
 close all 
 clear variables
 
-directory = 'img/set2/';
+directory = 'img/set4/';
 inputImgs = dir( strcat(directory, '*.bmp') );
 
 if ( size(inputImgs,1) < 1 )
@@ -15,7 +15,7 @@ for imInd=1:size(inputImgs)
     %read input image
     im = imread( strcat(directory, inputImgs(imInd).name) );
     figure
-    imshow(im); 
+    imshow(im); hold on;
     
     %get all the contour pixels
     contour = findBorder(im);
@@ -36,10 +36,11 @@ for imInd=1:size(inputImgs)
     %closed loop)
     verts(end,:)=[];    
 
-    figure;
+    %figure;
     vertsPlot = verts;
     vertsPlot(end+1,:) = verts(1,:); %make a loop for plotting purposes
-    plot(vertsPlot(:,1), vertsPlot(:,2));
+    scatter(vertsPlot(:,1), size(im,1)-vertsPlot(:,2), 'bo'); hold on;
+    plot(vertsPlot(:,1), size(im,1)-vertsPlot(:,2), 'b-');
     axis([0 size(im,2) 0 size(im,1)]);
     
     %generate struct describing each piece

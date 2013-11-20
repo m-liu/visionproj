@@ -20,7 +20,8 @@ function [newPolygons] = matchContour(polygons)
     % [3] = first polgyon vertex index; [4] second polgyon vertex index
     % [5] = contour match score
     scores = [];
-    angleErr = 5; 
+    global angleErr; 
+    angleErr = 5;
     dErr = 3
     
     %for each pair of polygons
@@ -77,6 +78,11 @@ function [newPolygons] = matchContour(polygons)
         end
     end
         
+    %TEST
+    %random perm scores
+    %perm = randperm(size(scores,1));
+    %scores = scores(perm,:);
+    
         %sort the scores and extract best score 
         scores = sortrows(scores, 5);
         bestMatch = scores(end, :);
