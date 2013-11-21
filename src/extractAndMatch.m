@@ -1,12 +1,12 @@
 function [matchScore] = extractAndMatch(imi, imj, verti, verti2, vertj, vertj2)
-    figure;
-    imshow(imi);
-    hold on;
-    scatter(verti.posX,size(imi,1)-verti.posY,'bo');
-    scatter(verti2.posX,size(imi,1)-verti2.posY, 'bo');
-    
-    scatter(vertj.posX,size(imi,1)-vertj.posY,'go');
-    scatter(vertj2.posX,size(imi,1)-vertj2.posY, 'go');
+%     figure;
+%     imshow(imi);
+%     hold on;
+%     scatter(verti.posX,size(imi,1)-verti.posY,'bo');
+%     scatter(verti2.posX,size(imi,1)-verti2.posY, 'bo');
+%     
+%     scatter(vertj.posX,size(imi,1)-vertj.posY,'go');
+%     scatter(vertj2.posX,size(imi,1)-vertj2.posY, 'go');
 
     % calculate the difference vector between the given vertices
     vectori = [verti2.posX-verti.posX verti2.posY-verti.posY];
@@ -42,14 +42,14 @@ function [matchScore] = extractAndMatch(imi, imj, verti, verti2, vertj, vertj2)
     extractedEdgei = zeros(minEdge, 3);
     extractedEdgej = zeros(minEdge, 3);
     
-    figure;
-    imshow(imiRotated);
-    hold on;
-    scatter(newVerti(1),size(imiRotated,1)-newVerti(2),'bo');
-    scatter(newVerti2(1),size(imiRotated,1)-newVerti2(2), 'bo');
-    
-    scatter(newVertj(1),size(imjRotated,1)-newVertj(2), 'go');
-    scatter(newVertj2(1),size(imjRotated,1)-newVertj2(2), 'go');
+%     figure;
+%     imshow(imiRotated);
+%     hold on;
+%     scatter(newVerti(1),size(imiRotated,1)-newVerti(2),'bo');
+%     scatter(newVerti2(1),size(imiRotated,1)-newVerti2(2), 'bo');
+%     
+%     scatter(newVertj(1),size(imjRotated,1)-newVertj(2), 'go');
+%     scatter(newVertj2(1),size(imjRotated,1)-newVertj2(2), 'go');
     
     for index=1:minEdge
         for adj=1:5
