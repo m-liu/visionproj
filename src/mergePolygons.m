@@ -62,7 +62,7 @@ for i=1:size(polyB.vertices,2)
     [vxNew,vyNew,xor,yor,trash] = rotateData(vxNew,vyNew,aX,aY,theta,'anticlockwise');
     %vxNew = vxNew + moveAx;
     %vyNew = vyNew + moveAy;
-    polyBvxNew(end+1, :) = [round(vxNew) round(vyNew)]
+    polyBvxNew(end+1, :) = [vxNew vyNew]
 end
 
 %create a new image canvas
@@ -84,8 +84,8 @@ if (ymin < 1)
 end
 
 %find size of new canvas
-width = max( size(pixA,2)+moveAx, max(polyBvxNew(:,1)) ) + 10
-height = max( size(pixA,1)+moveAy, max(polyBvxNew(:,2)) ) + 10
+width = max( size(pixA,2)+moveAx, ceil(max(polyBvxNew(:,1))) ) + 10
+height = max( size(pixA,1)+moveAy, ceil(max(polyBvxNew(:,2))) ) + 10
 imMerge(1:height, 1:width, 1:3) = 255; %initialize to white
 imMerge = uint8(imMerge);
 
@@ -97,14 +97,14 @@ for i=1:size(pixA,1)
             xA = xA+moveAx;
             yA = yA+moveAy;
             [rowM colM] = coord2mat([xA yA], size(imMerge));
-            imMerge(rowM, colM, :) = pixA(i, j, :);
+            imMerge(round(rowM), round(colM), :) = pixA(i, j, :);
         end
     end
 end
 
 
 %fill with polyB pixels after rotation
-pixBtr = imTransRotate(pixB, [bX bY], rad2deg(theta));
+pixBtr = imTransRotate(pixB, [bX bY], radtodeg(theta));
 centerX = floor(size(pixBtr,2)/2);
 centerY = floor(size(pixBtr,1)/2);
 tX = aX - centerX + moveAx;
@@ -117,7 +117,7 @@ for i=1:size(pixBtr,1)
             xNew = x + tX;
             yNew = y + tY;
             [rowM colM] = coord2mat([xNew yNew], size(imMerge));
-            imMerge(rowM, colM, :) = pixBtr(i, j, :);
+            imMerge(round(rowM), round(colM), :) = pixBtr(i, j, :);
             
         end
     end
@@ -138,14 +138,33 @@ for i=1:size(polyB.vertices,2)
     polyB.vertices(i).posY = polyBvxNew(i,2);
 end
 
+
+
+
 %generate new vertices data for merged polygon. First merge all vertices
 verticesMerged = polyA.vertices( 1:vA );
+
+%always remove the vA vertex from the list because we merge on the prev
+%edge
+verticesMerged(end) = [];
 
 %rotate the vertices list for polyB
 verticesNew = polyB.vertices( vB+1 : end );
 verticesNew = [verticesNew, polyB.vertices( 1:vB )];
+as = polyA.vertices(vA).angle + polyB.vertices(vB).angle;
+
+%remove vB if the angle is approximately 360
+if ( as < 360+angleErr && as > 360-angleErr)
+    verticesNew(end)=[];
+end
+
 verticesMerged = [ verticesMerged, verticesNew ];
 verticesMerged = [ verticesMerged, polyA.vertices( vA+1 : end ) ];
+
+
+
+
+
 
 %then delete/merge vertices
 while (1) 
