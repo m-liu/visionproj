@@ -9,3 +9,6 @@ Things to try:
 
 TODO: 
 1) take care of generating vertices when merging not 360 degree angles
+
+Bugfixe:
+-Add the angles together when the sum is not 360

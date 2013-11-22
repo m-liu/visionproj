@@ -52,9 +52,10 @@ function [matchScore] = extractAndMatch(imi, imj, verti, verti2, vertj, vertj2)
 %     scatter(newVertj2(1),size(imjRotated,1)-newVertj2(2), 'go');
     
     for index=1:minEdge
+        found = 1;
         for adj=1:5
             tempright = imiRotated(newMatiX+index-1,newMatiY+adj,:);            
-            templeft = imiRotated(newMatiX+index-1,newMatiY+adj,:);
+            templeft = imiRotated(newMatiX+index-1,newMatiY-adj,:);
             temprightflat = reshape(tempright,1,3);
             templeftflat = reshape(templeft,1,3);
             if ~(tempright == 255)
@@ -66,22 +67,26 @@ function [matchScore] = extractAndMatch(imi, imj, verti, verti2, vertj, vertj2)
             end
             if adj == 5
                 warning('MATLAB:NoValidPixel','No colored pixel found for imi at (%d,%d)', newMatiX, newMatiY+index-1);
+                found = 0;
             end
         end
-        for adj=1:5
-            tempright = imjRotated(newMatjX+index-1,newMatjY+adj,:);            
-            templeft = imjRotated(newMatjX+index-1,newMatjY+adj,:);
-            temprightflat = reshape(tempright,1,3);
-            templeftflat = reshape(templeft,1,3);
-            if ~(tempright == 255)
-                extractedEdgej(index,:) = temprightflat;
-                break;
-            elseif ~(templeft == 255)
-                extractedEdgej(index,:) = templeftflat;
-                break;
-            end
-            if adj == 5
-                warning('MATLAB:NoValidPixel','No colored pixel found for imj at (%d,%d)', newMatjX, newMatjY+index-1);
+        if found == 1
+            for adj=1:5
+                tempright = imjRotated(newMatjX+index-1,newMatjY+adj,:);            
+                templeft = imjRotated(newMatjX+index-1,newMatjY-adj,:);
+                temprightflat = reshape(tempright,1,3);
+                templeftflat = reshape(templeft,1,3);
+                if ~(tempright == 255)
+                    extractedEdgej(index,:) = temprightflat;
+                    break;
+                elseif ~(templeft == 255)
+                    extractedEdgej(index,:) = templeftflat;
+                    break;
+                end
+                if adj == 5
+                    warning('MATLAB:NoValidPixel','No colored pixel found for imj at (%d,%d)', newMatjX, newMatjY+index-1);
+                    extractedEdgei(index,:) = 0;
+                end
             end
         end
     end

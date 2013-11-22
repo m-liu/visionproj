@@ -10,10 +10,6 @@
 %
 %
 
-
-
-
-
 function [newPolygons] = matchContour(polygons)
     %keep track of a score for all the pieces and each vertex
     % [1] = first polygon index; [2] = second polygon index
@@ -44,16 +40,17 @@ function [newPolygons] = matchContour(polygons)
                     matchScore = inf;
                     verti = polygons(polyi).vertices(vi);
                     vertj = polygons(polyj).vertices(vj);
+                    vertiNext = polygons(polyi).vertices(mod(vi,nvi)+1);
+                    vertiPrev = polygons(polyi).vertices(mod(nvi+vi-2,nvi)+1);
+                    vertjNext = polygons(polyj).vertices(mod(vj,nvj)+1);
+                    vertjPrev = polygons(polyj).vertices(mod(nvj+vj-2,nvj)+1);
                     %check angles sum to 360
                     %TODO give an error threshold for approximation
                     anglesum = verti.angle + vertj.angle;
                     if (anglesum < 360+angleErr && anglesum > 360-angleErr)        
                        %extract edges for content matching
                        
-                       vertiNext = polygons(polyi).vertices(mod(vi,nvi)+1);
-                       vertiPrev = polygons(polyi).vertices(mod(nvi+vi-2,nvi)+1);
-                       vertjNext = polygons(polyj).vertices(mod(vj,nvj)+1);
-                       vertjPrev = polygons(polyj).vertices(mod(nvj+vj-2,nvj)+1);                      
+                                             
 
                        %check distance between vertex and neighbour
                        % note: vertices are recorded clockwise
@@ -92,7 +89,13 @@ function [newPolygons] = matchContour(polygons)
                            matchScore = extractAndMatch(imi, imj, verti, vertiPrev, vertj, vertjNext);
                        else 
                            %not a good match
+                           %content match score
+                           matchScore = (extractAndMatch(imi, imj, verti, vertiNext, vertj, vertjPrev) + ...
+                                            extractAndMatch(imi, imj, verti, vertiPrev, vertj, vertjNext)) / 2;
                        end
+                    else
+                        %content match score
+                        matchScore = extractAndMatch(imi, imj, verti, vertiPrev, vertj, vertjNext);
                     end
                     scores(end+1, :) = [polyi polyj vi vj sc -matchScore];
                 end
@@ -110,7 +113,7 @@ function [newPolygons] = matchContour(polygons)
         bestMatch = scores(end, :);
         
         %merge the two polygons that match on the angle
-        newPoly = mergePolygons( polygons(bestMatch(1)), polygons(bestMatch(2)), bestMatch(3), bestMatch(4) )
+        newPoly = mergePolygons(polygons(bestMatch(1)), polygons(bestMatch(2)), bestMatch(3), bestMatch(4) )
         
         %remove the two polygons from the original set
         %add the new polygon
