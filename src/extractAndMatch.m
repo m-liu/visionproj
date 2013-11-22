@@ -90,8 +90,28 @@ function [matchScore] = extractAndMatch(imi, imj, verti, verti2, vertj, vertj2)
             end
         end
     end
-   
+    
     matchScore = matchContent(extractedEdgei, extractedEdgej);
+    
+    % shift the edges against each other by 5 pixels up and down and
+    % retrieve the minimum score (giving us some leniency with errors)
+    for shift=1:5
+        % shift edge j down first
+        newEdgei = extractedEdgei(1+shift:end);
+        newEdgej = extractedEdgej(1:end-shift);
+        tempMatchScore = matchContent(newEdgei, newEdgej);
+        if (tempMatchScore < matchScore)
+            matchScore = tempMatchScore;
+        end
+        
+        % shift edge i down after
+        newEdgei = extractedEdgei(1:end-shift);
+        newEdgej = extractedEdgej(1+shift:end);
+        tempMatchScore = matchContent(newEdgei, newEdgej);
+        if (tempMatchScore < matchScore)
+            matchScore = tempMatchScore;
+        end
+    end
 end
 
 %% mapCoord
