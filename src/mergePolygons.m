@@ -139,27 +139,104 @@ for i=1:size(polyB.vertices,2)
 end
 
 
+polyAverts = polyA.vertices(1:end);
+polyBverts = polyB.vertices(1:end);
+
+%edit the vertex angles when a vertex merges with an edge
+
+done=0;
+i=vA;
+j=vB;
+cnt=0;
+while (~done && cnt < min(size(polyAverts,2), size(polyBverts,2)) )
+    asum = polyAverts(i).angle + polyBverts(j).angle;
+    dDiff = abs(polyAverts(i).dPrev - polyBverts(j).dNext);
+    %if angles sum up to 360 but edges are not the same length
+    if ((asum < 360+angleErr && asum > 360-angleErr) || (i==vA && j==vB))
+        if (dDiff > distErr)
+            
+            %the shorter edge updates its angle
+            if (polyAverts(i).dPrev < polyBverts(j).dNext)
+                iPrev = getPrevInd(i, size(polyAverts,2));
+                polyAverts(iPrev).angle = 180 + polyAverts(iPrev).angle;
+            else
+                jNext = getNextInd(j, size(polyBverts,2));
+                polyBverts(jNext).angle = 180 + polyBverts(jNext).angle;
+            end
+            done=1;
+        end
+
+    else
+        done = 1;
+
+    end
+        
+    i = getPrevInd(i, size(polyAverts,2));
+    j = getNextInd(j, size(polyBverts,2));
+    cnt = cnt+1;
+    
+end
+
+done=0;
+i=vA;
+j=vB;
+cnt=0;
+while (~done && cnt < min(size(polyAverts,2), size(polyBverts,2)) )
+    asum = polyAverts(i).angle + polyBverts(j).angle;
+    dDiff = abs(polyAverts(i).dNext - polyBverts(j).dPrev);
+    %if angles sum up to 360 but edges are not the same length
+    if (asum < 360+angleErr && asum > 360-angleErr )
+        if (dDiff > distErr)
+            
+            %the shorter edge updates its angle
+            if (polyAverts(i).dNext < polyBverts(j).dPrev)
+                iNext = getPrevInd(i, size(polyAverts,2));
+                polyAverts(iNext).angle = 180 + polyAverts(iNext).angle;
+            else
+                jPrev = getPrevInd(j, size(polyBverts,2));
+                polyBverts(jPrev).angle = 180 + polyBverts(jPrev).angle;
+            end
+            done=1;
+        end
+
+    %when merging angles that don't add up to 360, we're also done here
+    else
+        done=1;
+    end
+    
+    
+        
+    i = getNextInd(i, size(polyAverts,2));
+    j = getPrevInd(j, size(polyBverts,2));
+      cnt = cnt+1;
+    
+    
+end
 
 
 %generate new vertices data for merged polygon. First merge all vertices
-verticesMerged = polyA.vertices( 1:vA );
+verticesMerged = polyAverts( 1:vA );
 
 %always remove the vA vertex from the list because we merge on the prev
 %edge
 verticesMerged(end) = [];
 
 %rotate the vertices list for polyB
-verticesNew = polyB.vertices( vB+1 : end );
-verticesNew = [verticesNew, polyB.vertices( 1:vB )];
-as = polyA.vertices(vA).angle + polyB.vertices(vB).angle;
+verticesNew = polyBverts( vB+1 : end );
+verticesNew = [verticesNew, polyBverts( 1:vB )];
+as = polyAverts(vA).angle + polyBverts(vB).angle;
 
 %remove vB if the angle is approximately 360
 if ( as < 360+angleErr && as > 360-angleErr)
     verticesNew(end)=[];
+else
+    %otherwise keep the vertex and merge the angle
+    verticesNew(end).angle = polyAverts(vA).angle + polyBverts(vB).angle;
+    verticesNew(end).dNext = polyAverts(vA).dNext;
 end
 
 verticesMerged = [ verticesMerged, verticesNew ];
-verticesMerged = [ verticesMerged, polyA.vertices( vA+1 : end ) ];
+verticesMerged = [ verticesMerged, polyAverts( vA+1 : end ) ];
 
 
 
@@ -225,11 +302,21 @@ end
 % verticesMerged = verticesTmp;
 
 
-
+%recalculate dNext and dPrev
+    for i=1:size(verticesMerged, 2)
+        v = [verticesMerged(i).posX verticesMerged(i).posY];
+        iPrev = getPrevInd(i, size(verticesMerged,2));
+        iNext = getNextInd(i, size(verticesMerged,2));
+        vPrev = [verticesMerged(iPrev).posX verticesMerged(iPrev).posY];
+        vNext = [verticesMerged(iNext).posX verticesMerged(iNext).posY];
+        
+        verticesMerged(i).dNext = norm( vNext - v );
+        verticesMerged(i).dPrev = norm( vPrev - v );
+    end
 
 %compute perimeter
 perimeter = 0;
-for i=1:size(verticesMerged)
+for i=1:size(verticesMerged, 2)
     perimeter = perimeter + verticesMerged(i).dNext;
 end
 
@@ -259,6 +346,23 @@ function res = inProximity(pt1, pt2, distErr)
         res = 1;
     else
         res = 0;
+    end
+end
+
+function ind = getNextInd (currInd, size)
+    if (currInd==size(1))
+        ind = 1;
+    else
+        ind = currInd+1;
+    end
+end
+
+
+function ind = getPrevInd (currInd, size)
+    if (currInd==1)
+        ind = size(1);
+    else
+        ind = currInd-1;
     end
 end
 

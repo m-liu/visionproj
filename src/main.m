@@ -3,7 +3,7 @@
 close all 
 clear variables
 
-directory = 'img/set5/';
+directory = 'img/set7/';
 inputImgs = dir( strcat(directory, '*.bmp') );
 
 if ( size(inputImgs,1) < 1 )
