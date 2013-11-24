@@ -109,7 +109,8 @@ function [newPolygons] = matchContour(polygons)
     %scores = scores(perm,:);
     
         %sort the scores and extract best score 
-        scores = sortrows(scores, [5 6]);        
+        %scores = sortrows(scores, [5 6]);    
+        scores = sortrows(scores, 5);
         bestMatch = scores(end, :);
         
         %merge the two polygons that match on the angle

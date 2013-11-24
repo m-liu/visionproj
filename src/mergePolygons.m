@@ -4,6 +4,7 @@ function [ polyMerged ] = mergePolygons( polyA, polyB, vA, vB )
     
 distErr = 8;
 global angleErr;
+global figureInd;
 
 %[xr,yr,xor,yor,theta] = rotateData(x,y,xo,yo,theta,direction)
 
@@ -36,6 +37,24 @@ bNextY = polyB.vertices(vBnext).posY;
 %translate polyB according to the translate from vB to vA 
 transX = aX - bX;
 transY = aY - bY;
+
+%account for the one pixel offset by looking at the pixel values at that
+%point
+% [aRow aCol] = coord2mat([aX aY], size(pixA));
+% if (pixA(aRow, aCol, :) == 255)
+%     if (pixA(aRow+1, aCol, :) < 255)
+%         transY = transY - 1;
+%     elseif (pixA(aRow-1, aCol, :) < 255)
+%         transY = transY + 1;
+%     end
+%     
+%     if (pixA(aRow, aCol+1, :) < 255)
+%         transX = transX + 1;
+%     elseif (pixA(aRow, aCol-1, :) < 255)
+%         transY = transY - 1;
+%     end
+% end
+
 
 %rotate polyB about vB such that the edge aligns
 %NOTE arbitrary choice of which edge to align right now: previous edge
@@ -123,7 +142,7 @@ for i=1:size(pixBtr,1)
     end
 end
 
-figure;
+h = figure;
 imshow(imMerge); hold on
 
 %update polyA's vertices
@@ -334,6 +353,9 @@ end
 scatter(xPlot, yPlot, 'bo'); 
 text(xPlot, yPlot-7, label);
 
+name = strcat(int2str(figureInd), '_output.png');
+print(h, '-r200', '-dpng', name)
+figureInd = figureInd+1;
 
 
 

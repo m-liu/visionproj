@@ -14,6 +14,6 @@ score = sum(sum(sum((X - Y).^2)));
 score = sum(sum(sum(sqrt(abs(X - Y)))));
 
 % normalize score according to the size of the input array
-% score = score/size(X,1);
+ score = score/size(X,1);
 
 end

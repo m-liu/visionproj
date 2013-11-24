@@ -3,8 +3,12 @@
 close all 
 clear variables
 
-directory = 'img/set7/';
+global figureInd;
+figureInd=1;
+
+directory = 'img/set12/';
 inputImgs = dir( strcat(directory, '*.bmp') );
+
 
 if ( size(inputImgs,1) < 1 )
     error('image inputs not found');
